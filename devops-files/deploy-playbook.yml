@@ -1,0 +1,32 @@
+- hosts: "{{ ENV }}"
+  tasks:
+    - name: Creates directory
+      file:
+        path: /home/ubuntu/ansible/
+        state: directory
+        mode: 0700
+        recurse: yes
+    - name: Stop old container
+      command: docker stop backend-bot-wsp
+      ignore_errors: yes
+    - name: Delete old container
+      command: docker rm backend-bot-wsp
+      ignore_errors: yes
+    - name: Copy vars file
+      copy:
+        src: "{{ VARS_FILE }}"
+        dest: /home/ubuntu/ansible/vars_wsp.env
+        mode: 0666
+    - name: Obtener login de ECR
+      shell: aws ecr get-login-password --region us-east-1
+      register: ecr_token
+    - name: Log into ECR registry
+      shell: docker login --username AWS --password "{{ ecr_token.stdout}}" "{{ URI }}"
+    - name: Deploy new container
+      command: docker run -p 3000:3000 --env-file /home/ubuntu/ansible/vars_wsp.env -v bot-wsp:/app/bot_sessions --name backend-bot-wsp -d {{URI}}/backend-bot-wsp:{{PIPELINE_ID}}
+    - name: Clear builder Docker
+      command: docker builder prune -f
+    - name: Remove old images
+      shell: |
+        docker rmi $(docker images | tail -n +2 | awk '$1 == "<none>" {print $'3'}')
+      ignore_errors: yes

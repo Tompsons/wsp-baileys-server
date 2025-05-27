@@ -1,0 +1,22 @@
+---
+  - hosts: desa_1
+    tasks:
+    - name: Remove repository directory
+      file:
+        path: /home/ubuntu/backend-bot-wsp
+        state: absent
+    - name: Clone backend-bot-wsp repository
+      git:
+        repo: http://git:{{GITPASS}}@10.0.1.11/corrientes/backend/wsp-baileys-server.git
+        dest: /home/ubuntu/backend-bot-wsp
+        version: "{{ GIT_BRANCH }}"
+        single_branch: yes
+    - name: Build backend-bot-wsp
+      shell: >-
+         docker build -t {{ URI }}/backend-bot-wsp:{{VERSION}}.{{BUILD_NUMBER}} .
+      args:
+        chdir: /home/ubuntu/backend-bot-wsp
+    - name: Remove repository directory
+      file:
+        path: /home/ubuntu/backend-bot-wsp
+        state: absent

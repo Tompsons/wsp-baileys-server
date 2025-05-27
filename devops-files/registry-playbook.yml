@@ -1,0 +1,17 @@
+ - hosts: desa_1
+   gather_facts: yes
+   become: true
+   tasks:
+    - name: Obtener login de ECR
+      shell: aws ecr get-login-password --region us-east-1
+      register: ecr_token
+    - name: Log into ECR registry
+      shell: docker login --username AWS --password "{{ ecr_token.stdout}}" "{{ URI }}"
+    - name: Tag & Push image to ECR
+      shell: |
+        docker push {{ URI }}/backend-bot-wsp:{{VERSION}}.{{BUILD_NUMBER}}
+        docker tag {{ URI }}/backend-bot-wsp:{{VERSION}}.{{BUILD_NUMBER}} {{ URI }}/backend-bot-wsp:latest
+        docker push {{ URI }}/backend-bot-wsp:latest
+        docker tag {{ URI }}/backend-bot-wsp:{{VERSION}}.{{BUILD_NUMBER}} {{ URI }}/backend-bot-wsp:1.latest
+        docker push {{ URI }}/backend-bot-wsp:1.latest
+

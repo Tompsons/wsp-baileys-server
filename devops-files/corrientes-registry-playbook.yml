@@ -1,0 +1,22 @@
+ - hosts: desa_1                                                                                              
+   gather_facts: yes                                                                                          
+   become: true                                                                                               
+   tasks:                                                                                                     
+    - name: Configurar perfil                                                                                 
+      shell: |                                                                                                
+        aws configure set aws_access_key_id {{ACCESS_KEY}} --profile corrientes-ecr                           
+        aws configure set aws_secret_access_key {{SECRET_KEY}} --profile corrientes-ecr                       
+    - name: Obtener login de ECR                                                                              
+      shell: aws --profile=corrientes-ecr --region=us-west-2 ecr get-authorization-token --output text        
+      register: auth_result                                                                                   
+    - name: Obtener token de ECR                                                                              
+      shell: echo "{{ auth_result }}" | cut -f2 | base64 --decode | cut '-d:' -f2                             
+      register: ecr_token                                                                                     
+    - name: Log into ECR registry                                                                             
+      shell: docker login --password "{{ ecr_token.stdout}}" -u AWS {{URI_CORRIENTES}}                        
+    - name: Tag & Push image to ECR
+      shell: |
+        docker tag {{ URI }}/backend-bot-wsp:{{PIPELINE_ID}} {{ URI_CORRIENTES }}/dgrcorrientes:backend-bot-wsp-{{PIPELINE_ID}}
+        docker push {{ URI_CORRIENTES }}/dgrcorrientes:backend-bot-wsp-{{PIPELINE_ID}}
+        docker tag {{ URI }}/backend-bot-wsp:{{PIPELINE_ID}} {{ URI_CORRIENTES }}/dgrcorrientes:backend-bot-wsp.latest
+        docker push {{ URI_CORRIENTES }}/dgrcorrientes:backend-bot-wsp.latest

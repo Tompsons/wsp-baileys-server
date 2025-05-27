@@ -1,0 +1,14 @@
+[desa_1]
+10.1.1.10 ansible_ssh_user=ubuntu 
+[desa_2]
+10.1.1.11 ansible_ssh_user=ubuntu
+[test_1]
+10.2.1.10 ansible_ssh_user=ubuntu
+[test_2]
+10.2.1.11 ansible_ssh_user=ubuntu
+[prod_1]
+10.3.1.10 ansible_ssh_user=ubuntu
+[prod_2]
+10.3.1.11 ansible_ssh_user=ubuntu
+[all:vars]
+ansible_ssh_private_key_file=/home/ubuntu/.ssh/desa_key
